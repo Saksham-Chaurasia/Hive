@@ -1,0 +1,49 @@
+Hive Commands::
+
+1. **show databases;
+2. **use databases;
+3. **show tables;
+
+4. **create table student(stud_id int,name string, class int,
+					tot_marks double, math double, english double,
+					physics double, social double, year int)
+	row format delimited
+	fields terminated by ','
+	stored as textfile;
+
+
+5. After that creating a text file in a local with all the values
+	for the student in a comma separated way in the local machine
+
+6. copy this text file in hadoop 
+    **hadoop fs -put student_records student_recordinHadoop
+	or
+	**hadoop fs -copyfromlocal student_records student_recordinHadoop
+
+7. //loading the text file in the table student from Hadoop
+
+ ** load data inpath 'student_recordinHadoop' into table student;
+
+or 
+
+// loading the text file in the table student from local
+** load data local inpath '/home/training/hive_practice/student_records
+    into table student;
+
+User Defined Function::
+
+8. using an eclipse create a project on hiveudf and create a package udf
+    creating a class getMaxMarks
+	this java application giving the maximum marks from the subjects of all
+	students; which is in the same rows udf work on the row., 
+ 	while max() function work on the group of columns.
+
+9. exporting a jar file in a local machine 
+
+10. adding jar file into hive 
+** hive> add jar /home/training/hive_practice/getMaxMarks.jar
+
+11. creating a temporary function in hive
+** hive> create temporary function getmaxmarks as 'com.udf.GetMaxMarks';
+
+12.** hive> select getmaxmarks(math,english,physics,social) from student;
