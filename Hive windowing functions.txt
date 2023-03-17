@@ -1,0 +1,48 @@
+Hive windowing functions
+
+
+create table sales_data(order_id int, customer_id int, order_date string, order_amount int)
+row format delimited fields terminated by ',' stored as textfile;
+
+INSERT INTO sales_data (order_id, customer_id, order_date, order_amount)
+VALUES(1, 1001, '2022-01-01', 100),
+ (2, 1002, '2022-01-02', 200),
+ (3, 1001, '2022-01-03', 150),
+(4, 1003, '2022-01-04', 300),
+(5, 1002, '2022-01-05', 250),
+(6, 1001, '2022-01-06', 200),
+ (7, 1003, '2022-01-07', 150),
+  (8, 1002, '2022-01-08', 175),
+ (9, 1001, '2022-01-09', 225),
+ (10, 1003, '2022-01-10', 350);
+
+
+
+
+
+select order_id,customer_id, order_date, order_amount, avg(order_amount) over(partition by customer_id order by order_date rows between 2 preceding and current row) as rolling_avg_amount form sales_data;
+
+// there are several other functions in windowing we can use are:
+
+
+count(), min(), max(), 
+row_number() : returns the sequential number of the current row within the window
+dense_rank(): return the rank of the current row within the window, receives the same rank and the next rank is skip.
+rank(): return the rank of the current row , receives the same rank and the next rank is consecutive integer.
+first_value(): return the value specified column in the first row of the window
+last_value(): return the value specified column in the last row of the window
+
+1. row_number():
+select order_id, customer_id, order_date, order_amount, row_number() over(order by order_date) as row_num from sales_data;
+
+2. rank():
+select order_id, customer_id, order_date, order_amount, rank() over(partition by customer_id order by order_amount desc) as rank from sales_data;
+
+3. dense_rank():
+select order_id, customer_id, order_date, order_amount,dense_rank() over(partition by customer_id order by order_amount desc) as dense_rank from sales_data;
+
+4. first_value():
+select order_id, customer_id, order_date, order_amount, first_value(order_amount) over(partition by customer_id order by order_date) as first_value from sales_data;
+
+5. last_value():
+select order_id, customer_id, order_date, order_amount, last_value(order_amount) over(partition by customer_id order by order_date) as last_value from sales_data;
