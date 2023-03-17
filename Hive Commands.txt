@@ -1,0 +1,117 @@
+Hive Commands: 
+
+1. show databases;
+2. use databases;
+3. show tables;
+
+//setting the name to show which databases i'm using
+4. set hive.cli.print.current.db=true;
+
+//creating a table internally 
+5. create table student(id int, name varchar(15), city varchar(15), PRIMARY KEY id)
+	Row format delimited
+	fields terminated by ','
+	stored as textfile;
+
+or //creating a table externally
+create external table student(id int, name varchar(15), city varchar(15), PRIMARY KEY id)
+	Row format delimited
+	fields terminated by ','
+	stored as textfile;
+
+// if the table already exists
+create external table student if not exists(id int, name varchar(15), city varchar(15), PRIMARY KEY id)
+	Row format delimited
+	fields terminated by ','
+	stored as textfile
+	location 'hive_tables';
+
+
+// loading data in a table from hdfs
+6. Load Data Inpath 'hive_data/student.txt' overwrite into table student;
+
+//or loading data in a table from local
+
+load data local inpath '/home/training/name.txt' overwrite into table student;
+
+7. // using join 
+insert overwrite table out1 
+select a.custno, a.firstname,a.age,a.profession, b.amount,b.product
+from customer a JOIN student b On a.custno = b.custno;
+
+8. create table out2 (custno int, fistname string, age int, profession string, amount double, product string, level string) row format delimited fields terminated by ',' stored as textfile;
+
+insert overwrite table out2
+select *, case
+when age<30 then 'low'
+when age>=30 and age<50 then 'middle'
+when age>=50 then 'old'
+else 'others'
+end
+from out1;
+
+9. //using group by
+
+create table out3 (level string, amount double) 
+row format delimited 
+fields terminated by ','
+stored as textfile;
+
+insert overwrite table out3 select level, sum(amount) from out2 group by level;
+
+
+10. // partitioning
+
+create table emp(employee_id int, company_id int, seniority int, salary int , join_date string , quit_date string) Partitioned by (dept string) row format delimited fields terminated by ',' stored as texfile;
+
+load table local inpath 'home/training/hive_practice/employee' overwrite into table emp
+partition (dept='customer service');
+
+now you query  this , 
+select * from emp where dept = 'custome service '; the query result is very fast
+
+
+//dynamic partitioning
+
+create table emp2(employee_id int, company_id int, seniority int , salary int, join_date
+string, quit_date string) partitioned by (dept string) row format delimited fields terminated by ',' stored as textfile;
+
+// to load data into dynamic partitioning table, we first have to
+set hive.exec.dynamic.partition=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+insert into table emp2 partition(dept) select employee_id, company_id, seniority, salary, join_date, quit_date, dept from employee;
+
+alter table emp2 add partition(salary>50000, dept ='customer service') location '/emp2';
+
+
+// dropping partition 
+
+alter table emp2 drop partiton (salary>50000,dept ='customer service');
+
+//Bucketing
+create table emp3(employee_id int, company_id int, seniority int , salary int, join_date
+string, quit_date string) partitioned by (dept string) row format delimited fields terminated by ',' stored as textfile;
+
+
+load data local inpath '/home/training/hive_practice/employee' overwrite into table emp3;
+
+
+//enable bucketing
+
+set hive.enforce.bucketing=true;
+
+create table bucket_table(employee_id int, company_id int, seniority int, salary int, join_date string, quit_date string) partitioned by (dept string) clustered by (salary) into 4 buckets row format delimite fields terminated by ',';
+
+
+// inserting data into bucket_table from another table;
+insert into table bucket_table partition(dept) select employee_id, company_id, seniority, salary, join_date, quit_date , dept from employee;
+
+
+
+
+
+
+
+
+
